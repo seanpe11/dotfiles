@@ -1,0 +1,12 @@
+2022/09/01-23:22:45.424 4752 Reusing MANIFEST /home/seanpe/.config/obsidian/IndexedDB/app_obsidian.md_0.indexeddb.leveldb/MANIFEST-000001
+2022/09/01-23:22:45.424 4752 Recovering log #36
+2022/09/01-23:22:45.430 4752 Reusing old log /home/seanpe/.config/obsidian/IndexedDB/app_obsidian.md_0.indexeddb.leveldb/000036.log 
+2022/09/02-00:24:04.161 613a Level-0 table #41: started
+2022/09/02-00:24:04.171 613a Level-0 table #41: 1277249 bytes OK
+2022/09/02-00:24:04.175 613a Delete type=0 #36
+2022/09/02-00:32:21.685 613a Compacting 1@1 + 1@2 files
+2022/09/02-00:32:21.692 613a Generated table #42@1: 1585 keys, 181874 bytes
+2022/09/02-00:32:21.692 613a Compacted 1@1 + 1@2 files => 181874 bytes
+2022/09/02-00:32:21.695 613a compacted to: files[ 0 0 1 0 0 0 0 ]
+2022/09/02-00:32:21.696 613a Delete type=2 #41
+2022/09/02-00:32:21.696 613a Delete type=2 #38
