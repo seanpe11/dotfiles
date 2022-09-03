@@ -6,6 +6,18 @@ Included in this repository are my dotfiles. Currently the configs that are to s
 - [tmux](https://github.com/alacritty/alacritty) (terminal multiplexer)
 - [obsidian](https://obsidian.md/) (notetaking app, but I don't really do anything, just want a backup)
 - [polybar](https://github.com/polybar/polybar) status bar best for bspwm
+- [awesomewm](https://github.com/awesomeWM/awesome) awesome window manager
+
+#### Other stuff for workflow:
+- tmux resurrect
+- bpytop
+- lazygit
+- insomnia
+- qbittorrent
+
+#### Fonts
+- Space Mono Nerd Font
+- JetBrains Mono Nerd Font
 
 To add 
 - [ ] nvim (migrate out of LunarVim)
