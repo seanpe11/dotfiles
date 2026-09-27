@@ -1,0 +1,22 @@
+# The always-on session. This is what must come back after a reboot:
+# cloudflared carries dev*.seanpe.io AND dev-ttyd.seanpe.io, and ttyd is how
+# you get a terminal from your phone. Lose these and the laptop is unreachable
+# until you are physically sitting at it.
+#
+#   tmuxp load -d services     # start detached
+#   tmux attach -t services
+session_name: services
+start_directory: "~"
+windows:
+  - window_name: ttyd
+    layout: main-vertical
+    options:
+      main-pane-width: 60%
+    panes:
+      - bpytop
+      # The tunnel. Runs the config at ~/.cloudflared/config.yml.
+      - cloudflared tunnel run
+      # Patched ttyd build with the Nerd Font embedded in index.html.
+      # Was hardcoded to ~/Documents/explore/ttyd/build/ttyd, which breaks if
+      # that scratch checkout is ever cleaned.
+      - ~/.local/bin/ttyd-nerd

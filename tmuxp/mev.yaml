@@ -1,0 +1,12 @@
+# MEV research ship.
+#   tmuxp load mev
+session_name: mev
+start_directory: ~/Documents/projects/mev-explore
+windows:
+  - window_name: nvim
+    panes:
+      - nvim README.md
+  - window_name: claude
+    panes:
+      - shell_command:
+          - cmd: "# claude"

@@ -1,0 +1,2 @@
+#!/bin/bash
+exec "$HOME/.local/bin/ttyd" -t 'fontFamily=FiraCode Nerd Font Mono' -p 7681 -W tmux new -A -s ttyd_session

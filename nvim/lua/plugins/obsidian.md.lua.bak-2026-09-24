@@ -1,0 +1,45 @@
+return {
+  "obsidian-nvim/obsidian.nvim",
+  version = "*", -- recommended, use latest release instead of latest commit
+  lazy = true,
+  keys = {
+    { "<leader>oo", ":Obsidian ", desc = "Obsidian Command..." },
+    { "<leader>on", "<cmd>ObsidianNew<cr>", desc = "New Note" },
+    { "<leader>os", "<cmd>ObsidianSearch<cr>", desc = "Search Vault (Grep)" },
+    { "<leader>of", "<cmd>ObsidianQuickSwitch<cr>", desc = "Find Note (File)" },
+    { "<leader>oj", "<cmd>ObsidianFollowLink<cr>", desc = "Follow Link Under Cursor" },
+    { "<leader>ok", "<cmd>ObsidianBacklinks<cr>", desc = "Show Backlinks" },
+    { "<leader>ot", "<cmd>ObsidianToday<cr>", desc = "Today's Daily Note" },
+  },
+  ft = "markdown",
+  -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
+  -- event = {
+  --   -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
+  --   -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/*.md"
+  --   -- refer to `:h file-pattern` for more examples
+  --   "BufReadPre path/to/my-vault/*.md",
+  --   "BufNewFile path/to/my-vault/*.md",
+  -- },
+  dependencies = {
+    -- Required.
+    "nvim-lua/plenary.nvim",
+
+    -- see below for full list of optional dependencies 👇
+  },
+  opts = {
+    workspaces = {
+      {
+        name = "personal",
+        path = "~/Documents/PepeVault/",
+      },
+    },
+    -- Ensure daily_notes is a direct child of opts
+    daily_notes = {
+      folder = "01-Journal/A-Daily", -- Remove the "./" prefix for cleaner resolution
+      date_format = "%Y-%m-%d",
+      template = "99 - Meta/zz-Templates/DailyJournal.md",
+    },
+    -- Optional: adding this ensures the plugin knows where to find notes
+    notes_subdir = "02 - Projects",
+  },
+}

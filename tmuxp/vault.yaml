@@ -1,0 +1,14 @@
+# PepeVault — the Commodore's session. See PepeVault/CLAUDE.md for the role.
+#   tmuxp load vault
+session_name: PepeVault
+start_directory: ~/Documents/PepeVault
+windows:
+  - window_name: fish
+    panes:
+      - blank
+  - window_name: claude
+    panes:
+      # Deliberately not auto-started: each launch is a fresh context, and you
+      # usually want to choose between `claude` and `claude --continue`.
+      - shell_command:
+          - cmd: "# claude --continue"

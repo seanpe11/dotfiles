@@ -1,0 +1,15 @@
+[Unit]
+Description=Always-on tmux session: cloudflared tunnel + ttyd + bpytop
+Documentation=file:///home/seanpe/.tmuxp/services.yaml
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=PATH=/home/seanpe/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/seanpe/.local/bin/start-services-session
+ExecStop=/usr/bin/tmux kill-session -t services
+
+[Install]
+WantedBy=default.target

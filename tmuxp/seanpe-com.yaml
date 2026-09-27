@@ -1,0 +1,12 @@
+# The seanpe.io ship.
+#   tmuxp load seanpe-com
+session_name: seanpe_com
+start_directory: ~/Documents/projects/seanpe.com
+windows:
+  - window_name: nvim
+    panes:
+      - nvim .
+  - window_name: claude
+    panes:
+      - shell_command:
+          - cmd: "# claude --continue"
