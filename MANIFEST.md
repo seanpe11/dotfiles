@@ -1,8 +1,11 @@
 # What lives here, and where it belongs on a machine
 
+> **Agent config moved out.** Claude Code and opencode configuration now lives in
+> [`agentic-dotfiles`](https://github.com/seanpe11/agentic-dotfiles) — it changes on a
+> different cadence and deserves its own README set. This repo is machine config only.
+
 | Repo path | Deploy to | Notes |
 | :--- | :--- | :--- |
-| `claude/` | `~/.claude/` | Agents, skills, CLAUDE.md. Symlinked, not copied. `settings.json` is deliberately NOT tracked — it holds machine-specific policy. |
 | `nvim/` | `~/.config/nvim/` | LazyVim + obsidian.nvim + obsidian-query.nvim |
 | `tmuxp/` | `~/.tmuxp/` | Session definitions. `services` is load-bearing: cloudflared + ttyd. |
 | `systemd/user/` | `~/.config/systemd/user/` | `tmux-services.service` starts the `services` session at boot. Needs `loginctl enable-linger`. |
