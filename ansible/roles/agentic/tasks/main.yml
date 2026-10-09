@@ -1,0 +1,19 @@
+---
+# Agent config is a separate repo on purpose (dotfiles commit 9015153).
+# Its remote is donnager-only; it is not on GitHub yet.
+- name: Clone agentic-dotfiles
+  ansible.builtin.git:
+    repo: "{{ agentic_repo }}"
+    dest: "{{ agentic_dest }}"
+    version: master
+    update: false
+  register: agentic_clone
+
+- name: Run its installer (symlinks, idempotent)
+  ansible.builtin.command: "{{ agentic_dest }}/install.sh"
+  register: agentic_install
+  changed_when: "'link' in agentic_install.stdout"
+
+- name: Show what it linked
+  ansible.builtin.debug:
+    var: agentic_install.stdout_lines

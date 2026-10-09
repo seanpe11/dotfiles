@@ -1,0 +1,34 @@
+if status is-interactive
+    # Commands to run in interactive sessions can go here
+end
+
+alias ls='lsd'
+alias lsl='lsd -lF'
+alias dir='lsd'
+# alias cd='z'
+starship init fish | source
+zoxide init fish | source
+
+# opam configuration
+source /home/seanpe/.opam/opam-init/init.fish > /dev/null 2> /dev/null; or true
+
+function fish_greeting
+    echo (set_color normal)"“"(set_color --bold cyan)"Discipline"(set_color normal)" and "(set_color --bold cyan)"focus"(set_color normal)" are everything. "(set_color --bold cyan)"You"(set_color normal)" are in charge of your mind, so "(set_color --bold cyan)"master"(set_color normal)" it.”"
+end
+
+
+# emscripten (wasm) compiler
+set -x EMSDK_QUIET 1
+source "/home/seanpe/Downloads/emsdk/emsdk_env.fish"
+
+set -Ux GOOGLE_API_KEY '{{ google_api_key }}'
+
+set -gx FLYCTL_INSTALL "/home/your-user/.fly"
+set -gx PATH "$FLYCTL_INSTALL/bin" $PATH
+
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/home/seanpe/google-cloud-cli-linux-x86_64/google-cloud-sdk/path.fish.inc' ]; . '/home/seanpe/google-cloud-cli-linux-x86_64/google-cloud-sdk/path.fish.inc'; end
+
+# opencode
+fish_add_path /home/seanpe/.opencode/bin

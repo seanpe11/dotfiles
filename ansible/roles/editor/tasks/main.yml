@@ -1,0 +1,43 @@
+---
+# The repo's nvim/ is byte-identical to rocinante's live config and DOES contain
+# the obsidian.nvim fixes (daily-note folder, templates.folder, note_id_func).
+# github.com/seanpe11/nvim-config is at 40504ec (2026-01-08) and does NOT.
+# So: deploy from the repo, never from that remote.
+- name: Look at what is already at ~/.config/nvim
+  ansible.builtin.stat:
+    path: "{{ user_home }}/.config/nvim"
+  register: nvim_dest
+
+- name: Refuse to clobber a live nvim git checkout
+  ansible.builtin.stat:
+    path: "{{ user_home }}/.config/nvim/.git"
+  register: nvim_is_repo
+
+- name: Explain the skip
+  ansible.builtin.debug:
+    msg: >-
+      {{ user_home }}/.config/nvim is a git checkout (rocinante has 5 uncommitted
+      files there). Leaving it alone. Set editor_force_link=true to override after
+      committing.
+  when: nvim_is_repo.stat.exists and not editor_force_link
+
+- name: Archive an existing real ~/.config/nvim before linking
+  ansible.builtin.command:
+    cmd: "mv {{ user_home }}/.config/nvim {{ user_home }}/.config/nvim.bak-{{ ansible_facts['date_time']['date'] }}"
+    creates: "{{ user_home }}/.config/nvim.bak-{{ ansible_facts['date_time']['date'] }}"
+  when:
+    - nvim_dest.stat.exists
+    - not nvim_dest.stat.islnk
+    - not nvim_is_repo.stat.exists or editor_force_link
+
+- name: Link nvim config from the repo
+  ansible.builtin.file:
+    src: "{{ dotfiles_root }}/nvim"
+    dest: "{{ user_home }}/.config/nvim"
+    state: link
+    force: true
+  when: not nvim_is_repo.stat.exists or editor_force_link
+
+- name: Treesitter and LSP builds need a compiler
+  ansible.builtin.debug:
+    msg: "base-devel / @development-tools is assumed present; nvim will build parsers on first run."

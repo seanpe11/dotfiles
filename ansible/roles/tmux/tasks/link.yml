@@ -1,0 +1,22 @@
+---
+# Archive-then-link. Ansible refuses to convert a non-empty directory into a
+# symlink, and Sean's rule is to archive with a date rather than delete.
+- name: "Inspect {{ link_dest }}"
+  ansible.builtin.stat:
+    path: "{{ link_dest }}"
+  register: ld
+
+- name: "Archive the real path at {{ link_dest }}"
+  ansible.builtin.command:
+    cmd: "mv {{ link_dest }} {{ link_dest }}.bak-{{ ansible_facts['date_time']['date'] }}"
+    creates: "{{ link_dest }}.bak-{{ ansible_facts['date_time']['date'] }}"
+  when:
+    - ld.stat.exists
+    - not ld.stat.islnk
+
+- name: "Link {{ link_dest }} -> {{ link_src }}"
+  ansible.builtin.file:
+    src: "{{ dotfiles_root }}/{{ link_src }}"
+    dest: "{{ link_dest }}"
+    state: link
+    force: true

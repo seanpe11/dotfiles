@@ -1,0 +1,71 @@
+---
+# MANIFEST.md is the source of truth for these paths. Keep them in step.
+- name: Ensure target directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ user_home }}/.local/bin"
+    - "{{ user_home }}/.config/systemd/user"
+
+- name: Link tmux and tmuxp config from the repo
+  ansible.builtin.include_tasks: link.yml
+  loop:
+    - { src: ".tmux.conf", dest: "{{ user_home }}/.tmux.conf" }
+    - { src: "tmuxp",      dest: "{{ user_home }}/.tmuxp" }
+  loop_control:
+    loop_var: lk
+  vars:
+    link_src: "{{ lk.src }}"
+    link_dest: "{{ lk.dest }}"
+
+- name: Install scripts from bin/
+  ansible.builtin.copy:
+    src: "{{ dotfiles_root }}/bin/{{ item }}"
+    dest: "{{ user_home }}/.local/bin/{{ item }}"
+    mode: "0755"
+  loop:
+    - start-services-session
+    - ttyd-nerd
+
+- name: Install tpm
+  ansible.builtin.git:
+    repo: https://github.com/tmux-plugins/tpm
+    dest: "{{ user_home }}/.tmux/plugins/tpm"
+    version: master
+    update: false
+
+# MANIFEST.md: tmuxp lives in its own venv, not in site-packages.
+- name: Create the tmuxp venv
+  ansible.builtin.pip:
+    name: tmuxp
+    virtualenv: "{{ user_home }}/.local/share/venv-tmuxp"
+    virtualenv_command: "python3 -m venv"
+
+- name: Expose tmuxp on PATH
+  ansible.builtin.file:
+    src: "{{ user_home }}/.local/share/venv-tmuxp/bin/tmuxp"
+    dest: "{{ user_home }}/.local/bin/tmuxp"
+    state: link
+
+# ⚠️ `services` carries the cloudflared tunnel and ttyd — Sean's phone access to
+# rocinante. Install the unit, enable it, but NEVER restart it as a side effect.
+- name: Install the tmux-services unit
+  ansible.builtin.copy:
+    src: "{{ dotfiles_root }}/systemd/user/tmux-services.service"
+    dest: "{{ user_home }}/.config/systemd/user/tmux-services.service"
+    mode: "0644"
+  register: services_unit
+
+- name: Reload the user daemon
+  ansible.builtin.systemd_service:
+    scope: user
+    daemon_reload: true
+  when: services_unit is changed
+
+- name: Enable tmux-services without starting it
+  ansible.builtin.systemd_service:
+    name: tmux-services.service
+    scope: user
+    enabled: true

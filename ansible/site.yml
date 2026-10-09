@@ -1,0 +1,18 @@
+---
+# Tag convention follows pemily-homelab: `--tags user` needs no sudo;
+# `root` and `wsl` do. Run from the machine being provisioned where possible.
+#
+#   cd ansible && ansible-playbook site.yml --limit pegasus-wsl --ask-become-pass
+#
+- name: Workstation devtooling
+  hosts: workstations
+  roles:
+    # Order matters: wsl fixes systemd + inotify, and everything after it
+    # assumes a working `systemctl --user`.
+    - { role: wsl,     tags: [wsl],     become: true, when: is_wsl | default(false) }
+    - { role: base,    tags: [root, base],    become: true }
+    - { role: shell,   tags: [user, shell] }
+    - { role: editor,  tags: [user, editor] }
+    - { role: tmux,    tags: [user, tmux] }
+    - { role: vault,   tags: [user, vault] }
+    - { role: agentic, tags: [user, agentic] }

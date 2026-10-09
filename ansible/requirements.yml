@@ -1,0 +1,6 @@
+---
+# Install on a fresh machine before the first run:
+#   ansible-galaxy collection install -r requirements.yml
+collections:
+  - name: community.general    # pacman module
+  - name: ansible.posix        # sysctl module

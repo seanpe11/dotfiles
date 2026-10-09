@@ -1,0 +1,57 @@
+---
+- name: Fail early on an unknown package manager
+  ansible.builtin.assert:
+    that: os_family_pkg in ['pacman', 'dnf']
+    fail_msg: "Set os_family_pkg (pacman|dnf) for {{ inventory_hostname }} in the inventory."
+
+- name: Install toolchain (pacman)
+  community.general.pacman:
+    name: "{{ tooling_common + tooling_pacman }}"
+    state: present
+    update_cache: true
+  when: os_family_pkg == 'pacman'
+
+- name: Install toolchain (dnf)
+  ansible.builtin.dnf:
+    name: "{{ tooling_common + tooling_dnf }}"
+    state: present
+  when: os_family_pkg == 'dnf'
+
+# The lesson from 2026-10-09: syncthing held 79% of the inotify budget indexing
+# 759,905 files and it read as desktop input lag. WSL defaults are lower still.
+- name: Raise inotify limits persistently
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-devtooling.conf
+    mode: "0644"
+    content: |
+      # Managed by dotfiles/ansible. See the vault note "Syncthing watch saturation".
+      {% for k, v in sysctl_inotify.items() %}
+      {{ k }} = {{ v }}
+      {% endfor %}
+  notify: Reload sysctl
+
+- name: Apply inotify limits now
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+    reload: false
+  loop: "{{ sysctl_inotify | dict2items }}"
+
+# Lives here, not in `shell`: it needs sudo, and `--tags user` must stay
+# password-free. Same split as pemily-homelab.
+- name: Make fish the login shell
+  ansible.builtin.user:
+    name: "{{ target_user }}"
+    shell: /usr/bin/fish
+
+- name: Add the user to the docker group
+  ansible.builtin.user:
+    name: "{{ target_user }}"
+    groups: docker
+    append: true
+
+- name: AUR tooling (opt-in -- run with --tags aur)
+  ansible.builtin.include_tasks: aur.yml
+  when: os_family_pkg == 'pacman'
+  tags: [aur, never]

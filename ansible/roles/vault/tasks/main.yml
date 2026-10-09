@@ -1,0 +1,42 @@
+---
+# PepeVault is ALREADY on pegasus: syncthing folder xuuip-ekrww, 99.97% complete.
+# This role's job is persistence and watch hygiene, NOT moving data.
+- name: Refuse to run against a /mnt/c path
+  ansible.builtin.assert:
+    that: not vault_path is search('^/mnt/')
+    fail_msg: >-
+      vault_path is under /mnt/ (Windows drvfs). Small-file work there is an order
+      of magnitude slower and recreates the lag this repo exists to remove.
+      Put the vault on ext4 inside the WSL filesystem.
+
+- name: Enable syncthing as a user unit
+  ansible.builtin.systemd_service:
+    name: syncthing.service
+    scope: user
+    enabled: true
+    state: started
+
+- name: Ship .stignore so syncthing never indexes build artifacts
+  ansible.builtin.copy:
+    dest: "{{ item }}/.stignore"
+    mode: "0644"
+    force: false        # never overwrite a hand-tuned one
+    content: |
+      // Managed by dotfiles/ansible. Ignore patterns are PER-DEVICE — syncthing
+      // does not sync this file, so every machine needs its own copy.
+      // See the vault note "Syncthing watch saturation".
+      (?d)node_modules
+      (?d).venv
+      (?d)venv
+      (?d)__pycache__
+      (?d).pytest_cache
+      (?d).mypy_cache
+      (?d)target
+      (?d)dist
+      (?d)build
+      (?d).next
+      (?d).cache
+      (?d)*.egg-info
+      .stignore.bak-*
+      .git
+  loop: "{{ syncthing_folders }}"

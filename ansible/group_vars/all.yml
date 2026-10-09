@@ -1,0 +1,97 @@
+---
+# The toolchain, taken from `command -v` on rocinante 2026-10-09 — what Sean
+# actually uses, not a generic "dev machine" list. Versions recorded so drift
+# between machines is visible rather than guessed.
+#
+# ⚠️ Package NAMES below are a starting point. Verify each against pacman and dnf
+# before trusting a run; several differ (fd vs fd-find, gh vs github-cli).
+
+# Same name on both pacman and dnf
+tooling_common:
+  - neovim            # 0.12.0-dev-1351 on rocinante — AUR neovim-git on Arch
+  - tmux
+  - fish              # 3.7.1
+  - git               # 2.49.0
+  - ripgrep           # 14.1.1
+  - fzf               # 0.61.3
+  - eza
+  - zoxide            # 0.9.4
+  - starship          # 1.18.2
+  - lazygit
+  - jq                # 1.7.1
+  - nodejs            # 22.14.0
+  - npm               # 10.8.3
+  - pnpm              # 10.8.0
+  - uv                # 0.7.3
+  - docker            # 28.1.1
+  - syncthing         # 1.29.5
+  - mosh              # NOT on rocinante yet — add it; fixes perceived ssh latency
+  - bat               # not installed anywhere yet
+  - yq                # not installed anywhere yet
+
+tooling_pacman:
+  - github-cli        # 'gh' on Fedora
+  - fd                # 'fd-find' on Fedora
+  - python
+  - rust              # rustc 1.89.0 / cargo 1.89.0
+  - go                # on PATH on rocinante but reports no version — verify
+  - git-delta
+
+tooling_dnf:
+  - gh                # 2.79.0
+  - fd-find
+  - python3           # 3.13.3
+  - cargo
+  - golang
+  - git-delta
+
+# Not in distro repos — AUR on Arch, upstream installers elsewhere.
+tooling_out_of_band:
+  - cloudflared       # 2025.9.1
+  - ttyd              # 1.7.7 — patched build, see MANIFEST.md "Not tracked, on purpose"
+  - claude-code       # 2.1.295
+  - opencode          # 1.18.27
+  - ollama            # 0.1.31 on rocinante — very stale, current is far ahead
+  - tmuxp             # 1.74.0, installed in a venv at ~/.local/share/venv-tmuxp (per MANIFEST)
+
+# Deploy map. This is MANIFEST.md turned into data — keep the two in step.
+dotfiles_links:
+  - { src: "nvim",                 dest: "~/.config/nvim" }
+  - { src: "tmuxp",                dest: "~/.tmuxp" }
+  - { src: "systemd/user",         dest: "~/.config/systemd/user" }
+  - { src: "bin",                  dest: "~/.local/bin" }
+  - { src: ".tmux.conf",           dest: "~/.tmux.conf" }
+  - { src: "config/hypr",          dest: "~/.config/hypr" }      # rocinante only — no compositor in WSL
+  - { src: "config/kitty",         dest: "~/.config/kitty" }
+
+# Today's lesson, encoded so it can't regress. See the vault note.
+sysctl_inotify:
+  fs.inotify.max_user_watches: 524288
+  fs.inotify.max_user_instances: 512
+
+# ---- Paths and identity -----------------------------------------------------
+target_user: "{{ ansible_facts['user_id'] }}"
+user_home: "{{ ansible_facts['env']['HOME'] }}"
+# The repo root, derived from where the playbook sits. Works wherever it's cloned.
+dotfiles_root: "{{ (playbook_dir + '/..') | realpath }}"
+
+# ---- Role switches ----------------------------------------------------------
+# false speeds up command lookup (no giant Windows PATH) but breaks
+# explorer.exe / clip.exe / `code .` from inside WSL.
+wsl_append_windows_path: true
+
+# Guard: the editor role will not replace a live nvim git checkout unless this
+# is true. rocinante has 5 uncommitted files in ~/.config/nvim — commit first.
+editor_force_link: false
+
+# ---- Vault ------------------------------------------------------------------
+# MUST be on ext4. An assert in the vault role refuses anything under /mnt/.
+vault_path: "{{ user_home }}/Documents/PepeVault"
+syncthing_folders:
+  - "{{ user_home }}/Documents"
+  - "{{ vault_path }}"
+
+# ---- Agentic ----------------------------------------------------------------
+# Not on GitHub yet — donnager is the only remote. Reachable over the tailnet.
+agentic_repo: "pemily@donnager:git/agentic-dotfiles.git"
+agentic_dest: "{{ user_home }}/Documents/projects/agentic-dotfiles"

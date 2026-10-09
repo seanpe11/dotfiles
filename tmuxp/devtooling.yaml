@@ -1,0 +1,16 @@
+# Devtooling playbook ship.
+#   tmuxp load devtooling
+session_name: devtooling
+start_directory: ~/Documents/projects/dotfiles
+windows:
+  - window_name: nvim
+    panes:
+      - nvim CLAUDE.md
+  - window_name: ansible
+    panes:
+      - shell_command:
+          - cmd: "cd ansible"
+  - window_name: claude
+    panes:
+      - shell_command:
+          - cmd: "# claude"

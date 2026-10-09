@@ -1,0 +1,21 @@
+---
+# Tagged `never`: run explicitly with --tags aur. Needs base-devel and cannot run
+# as root (makepkg refuses). Bootstraps paru, then installs the out-of-band tools.
+- name: Check for an AUR helper
+  ansible.builtin.command: which paru
+  register: paru_check
+  failed_when: false
+  changed_when: false
+
+- name: Bootstrap paru
+  ansible.builtin.shell: |
+    set -e
+    tmp=$(mktemp -d)
+    git clone https://aur.archlinux.org/paru-bin.git "$tmp/paru-bin"
+    cd "$tmp/paru-bin" && makepkg -si --noconfirm
+  when: paru_check.rc != 0
+  changed_when: true
+
+- name: Install out-of-band tooling from the AUR
+  ansible.builtin.command: "paru -S --needed --noconfirm {{ tooling_out_of_band | join(' ') }}"
+  changed_when: true

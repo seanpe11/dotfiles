@@ -1,0 +1,29 @@
+# Obsidian app state — 89 of this repo's 110 tracked files were Electron cache
+# blobs. They are machine state, not config, and must never provision a machine.
+# NOTE: .gitignore does not untrack what is already tracked. To untrack (keeps
+# files on disk):
+#   git rm -r --cached obsidian/Cache obsidian/"Code Cache" obsidian/GPUCache \
+#     obsidian/IndexedDB obsidian/"Local Storage" obsidian/"Session Storage" \
+#     obsidian/databases obsidian/Cookies* obsidian/QuotaManager*
+obsidian/Cache/
+obsidian/Code Cache/
+obsidian/GPUCache/
+obsidian/IndexedDB/
+obsidian/Local Storage/
+obsidian/Session Storage/
+obsidian/databases/
+obsidian/Crashpad/
+obsidian/Cookies
+obsidian/Cookies-journal
+obsidian/QuotaManager
+obsidian/QuotaManager-journal
+obsidian/Network Persistent State
+obsidian/TransportSecurity
+obsidian/obsidian.log
+
+# Secrets and machine-local
+*.retry
+ansible/group_vars/*.local.yml
+
+# Filled-in secrets — only the .example is tracked
+ansible/group_vars/secrets.yml

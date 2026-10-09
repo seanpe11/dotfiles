@@ -1,0 +1,36 @@
+---
+# fish was tracked nowhere before 2026-10-09. It is also where a live Google API
+# key sat in plaintext, so the config is a TEMPLATE and the secret comes from
+# group_vars/secrets.yml, which is gitignored. See secrets.yml.example.
+- name: Require the secrets file
+  ansible.builtin.assert:
+    that:
+      - google_api_key is defined
+      - google_api_key != 'REPLACE_ME'
+      - google_api_key | length > 10
+    fail_msg: >-
+      Copy ansible/group_vars/secrets.yml.example to secrets.yml and put a real
+      key in it. Do not commit it. The old key was exposed in plaintext on
+      2026-10-09 -- rotate it rather than reusing it.
+
+- name: Ensure fish config directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0700"
+  loop:
+    - "{{ user_home }}/.config/fish"
+    - "{{ user_home }}/.config/fish/conf.d"
+
+- name: Deploy fish config
+  ansible.builtin.template:
+    src: config.fish.j2
+    dest: "{{ user_home }}/.config/fish/config.fish"
+    mode: "0600"
+
+- name: Deploy rustup shim
+  ansible.builtin.copy:
+    src: "{{ dotfiles_root }}/config/fish/conf.d/rustup.fish"
+    dest: "{{ user_home }}/.config/fish/conf.d/rustup.fish"
+    mode: "0644"
+  failed_when: false
