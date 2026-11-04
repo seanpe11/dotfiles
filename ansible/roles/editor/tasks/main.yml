@@ -1,42 +1,69 @@
 ---
-# The repo's nvim/ is byte-identical to rocinante's live config and DOES contain
-# the obsidian.nvim fixes (daily-note folder, templates.folder, note_id_func).
-# github.com/seanpe11/nvim-config is at 40504ec (2026-01-08) and does NOT.
-# So: deploy from the repo, never from that remote.
+# ~/.config/nvim is a clone of nvim-config, the one authoritative copy. This repo
+# used to carry an nvim/ snapshot that drifted from it; that copy is gone.
+#
+# Clone-only: an existing checkout is never pulled, reset or relinked, so local
+# work on it survives a re-run and --check --diff stays clean. Pulling is yours.
 - name: Look at what is already at ~/.config/nvim
   ansible.builtin.stat:
     path: "{{ user_home }}/.config/nvim"
   register: nvim_dest
 
-- name: Refuse to clobber a live nvim git checkout
+- name: Look for a git checkout there
   ansible.builtin.stat:
     path: "{{ user_home }}/.config/nvim/.git"
   register: nvim_is_repo
 
-- name: Explain the skip
-  ansible.builtin.debug:
-    msg: >-
-      {{ user_home }}/.config/nvim is a git checkout (rocinante has 5 uncommitted
-      files there). Leaving it alone. Set editor_force_link=true to override after
-      committing.
-  when: nvim_is_repo.stat.exists and not editor_force_link
-
-- name: Archive an existing real ~/.config/nvim before linking
+# A real directory or the old symlink into dotfiles/nvim: move it aside, don't delete.
+- name: Archive a ~/.config/nvim that is not a checkout
   ansible.builtin.command:
     cmd: "mv {{ user_home }}/.config/nvim {{ user_home }}/.config/nvim.bak-{{ ansible_facts['date_time']['date'] }}"
     creates: "{{ user_home }}/.config/nvim.bak-{{ ansible_facts['date_time']['date'] }}"
   when:
     - nvim_dest.stat.exists
-    - not nvim_dest.stat.islnk
-    - not nvim_is_repo.stat.exists or editor_force_link
+    - not nvim_is_repo.stat.exists
 
-- name: Link nvim config from the repo
-  ansible.builtin.file:
-    src: "{{ dotfiles_root }}/nvim"
+- name: Clone nvim-config
+  ansible.builtin.git:
+    repo: "{{ nvim_config_repo }}"
     dest: "{{ user_home }}/.config/nvim"
-    state: link
-    force: true
-  when: not nvim_is_repo.stat.exists or editor_force_link
+    version: "{{ nvim_config_version }}"
+    update: false
+  when: not nvim_is_repo.stat.exists
+
+- name: Read the checkout's remote
+  ansible.builtin.command:
+    cmd: git -C {{ user_home }}/.config/nvim remote get-url origin
+  register: nvim_origin
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Warn when the checkout points somewhere else
+  ansible.builtin.debug:
+    msg: >-
+      ~/.config/nvim's origin is '{{ nvim_origin.stdout }}', not {{ nvim_config_repo }}
+      or {{ nvim_config_pushurl }}. Left alone.
+  when:
+    - nvim_origin.rc == 0
+    - nvim_origin.stdout not in [nvim_config_repo, nvim_config_pushurl]
+
+# Cloned over HTTPS so a fresh host needs no GitHub key; pushes go over SSH.
+- name: Read the checkout's push URL
+  ansible.builtin.command:
+    cmd: git -C {{ user_home }}/.config/nvim config --get remote.origin.pushurl
+  register: nvim_pushurl
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Push nvim-config over SSH
+  ansible.builtin.command:
+    cmd: git -C {{ user_home }}/.config/nvim config remote.origin.pushurl {{ nvim_config_pushurl }}
+  when:
+    - nvim_origin.rc == 0
+    - nvim_origin.stdout == nvim_config_repo
+    - nvim_pushurl.stdout != nvim_config_pushurl
 
 - name: Treesitter and LSP builds need a compiler
   ansible.builtin.debug:

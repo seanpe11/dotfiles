@@ -6,7 +6,7 @@
 
 | Repo path | Deploy to | Notes |
 | :--- | :--- | :--- |
-| `nvim/` | `~/.config/nvim/` | LazyVim + obsidian.nvim + obsidian-query.nvim |
+| *(not in this repo)* | `~/.config/nvim/` | Cloned from [`nvim-config`](https://github.com/seanpe11/nvim-config) branch `main` by the `editor` role. LazyVim + obsidian.nvim + obsidian-query.nvim |
 | `tmuxp/` | `~/.tmuxp/` | Session definitions. `services` is load-bearing: cloudflared + ttyd. |
 | `systemd/user/` | `~/.config/systemd/user/` | `tmux-services.service` starts the `services` session at boot. Needs `loginctl enable-linger`. |
 | `bin/` | `~/.local/bin/` | `ttyd-nerd` (patched ttyd launcher), `start-services-session` (idempotent tmuxp wrapper) |

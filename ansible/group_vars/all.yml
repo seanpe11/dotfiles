@@ -55,8 +55,8 @@ tooling_out_of_band:
   - tmuxp             # 1.74.0, installed in a venv at ~/.local/share/venv-tmuxp (per MANIFEST)
 
 # Deploy map. This is MANIFEST.md turned into data — keep the two in step.
+# ~/.config/nvim is not here: the editor role clones nvim-config (below).
 dotfiles_links:
-  - { src: "nvim",                 dest: "~/.config/nvim" }
   - { src: "tmuxp",                dest: "~/.tmuxp" }
   - { src: "systemd/user",         dest: "~/.config/systemd/user" }
   - { src: "bin",                  dest: "~/.local/bin" }
@@ -80,9 +80,11 @@ dotfiles_root: "{{ (playbook_dir + '/..') | realpath }}"
 # explorer.exe / clip.exe / `code .` from inside WSL.
 wsl_append_windows_path: true
 
-# Guard: the editor role will not replace a live nvim git checkout unless this
-# is true. rocinante has 5 uncommitted files in ~/.config/nvim — commit first.
-editor_force_link: false
+# The editor role clones this to ~/.config/nvim and never touches an existing
+# checkout. Pin the branch: GitHub's default `master` is an unrelated 2022 config.
+nvim_config_repo: https://github.com/seanpe11/nvim-config.git
+nvim_config_pushurl: git@github.com:seanpe11/nvim-config.git
+nvim_config_version: main
 
 # ---- Vault ------------------------------------------------------------------
 # MUST be on ext4. An assert in the vault role refuses anything under /mnt/.
