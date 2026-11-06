@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# fmux: one fzf list for everything you switch between, in this order:
+#   ●  live tmux sessions (not the current one)
+#   ▶  tmuxp layouts in ~/.tmuxp whose session isn't live
+#   /  project directories under SEARCH_DIRS
+# `fmux <dir>` skips the list and opens that directory.
+
+SEARCH_DIRS=(
+    "$HOME/Documents/work"
+    "$HOME/Documents/projects"
+    "$HOME/Documents/explore"
+    "$HOME/Documents/misc"
+    "$HOME/Documents/work/DataAnnotation"
+    "$HOME/Dockers"
+    "$HOME/Documents/PepeVault"
+)
+LAYOUT_DIR="${FMUX_LAYOUT_DIR:-$HOME/.tmuxp}"
+# Load-bearing (cloudflared + ttyd). Listed when live; never loaded, killed or renamed here.
+PROTECTED="services"
+
+current=""
+[[ -n $TMUX ]] && current=$(tmux display-message -p '#S')
+
+# session_name: from a tmuxp yaml
+layout_session() { sed -n 's/^session_name:[[:space:]]*//p' "$1" | head -1 | tr -d "\"'"; }
+
+# Directory -> session name. tmux turns . and : into _ itself; - is normalised too,
+# so a directory and its layout (notes-seanpe-io / notes_seanpe_io) land on one session.
+dir_session() { basename "$1" | tr '.:-' '___'; }
+
+# Name of the layout whose session_name is $1, if there is one.
+layout_for_session() {
+    local f
+    for f in "$LAYOUT_DIR"/*.yaml; do
+        [[ -e $f && $(layout_session "$f") == "$1" ]] && { basename "$f" .yaml; return 0; }
+    done
+    return 1
+}
+
+go() {
+    if [[ -n $TMUX ]]; then tmux switch-client -t "=$1"; else tmux attach-session -t "=$1"; fi
+}
+
+load_layout() { # <layout> <session_name>
+    [[ $2 == "$PROTECTED" ]] && return 1
+    # tmuxp ignores $TMUX's socket; point it at the server we're in.
+    local sock=()
+    [[ -n $TMUX ]] && sock=(-S "${TMUX%%,*}")
+    tmuxp load -d "${sock[@]}" "$LAYOUT_DIR/$1.yaml" >/dev/null && go "$2"
+}
+
+open_dir() {
+    local dir=$1 name layout
+    name=$(dir_session "$dir")
+    if tmux has-session -t "=$name" 2>/dev/null; then go "$name"; return; fi
+    # A layout owns this session name: load it rather than make a bare twin.
+    if layout=$(layout_for_session "$name"); then load_layout "$layout" "$name"; return; fi
+    if [[ -z $TMUX ]] && ! tmux list-sessions &>/dev/null; then
+        tmux new-session -s "$name" -c "$dir"; return
+    fi
+    tmux new-session -ds "$name" -c "$dir" && go "$name"
+}
+
+# Rows are "display<TAB>kind<TAB>target<TAB>session"; fzf shows only the display.
+rows() {
+    local s w a f name live
+    live=$(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+    while IFS=$'\t' read -r s w a; do
+        [[ -z $s || $s == "$current" ]] && continue
+        printf '●  %-24s %3sw  %s\tsession\t%s\t%s\n' "$s" "$w" "$( ((a > 0)) && echo attached)" "$s" "$s"
+    done < <(tmux list-sessions -F '#{session_name}	#{session_windows}	#{session_attached}' 2>/dev/null)
+    for f in "$LAYOUT_DIR"/*.yaml; do
+        [[ -e $f ]] || continue
+        name=$(layout_session "$f")
+        [[ -z $name || $name == "$PROTECTED" ]] && continue
+        grep -qxF -- "$name" <<<"$live" && continue
+        printf '▶  %-24s (layout)\tlayout\t%s\t%s\n' "$(basename "$f" .yaml)" "$(basename "$f" .yaml)" "$name"
+    done
+    find "${SEARCH_DIRS[@]}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null |
+        while read -r f; do printf '/  %s\tdir\t%s\t\n' "${f/#$HOME/\~}" "$f"; done
+}
+
+if [[ $# -eq 1 ]]; then
+    open_dir "$1"
+    exit
+fi
+
+out=$(rows | fzf --tiebreak=index --layout=reverse --delimiter=$'\t' --with-nth=1 --print-query --prompt='fmux> ')
+rc=$?
+((rc == 130)) && exit 0 # cancelled
+query=$(head -1 <<<"$out")
+pick=$(sed -n 2p <<<"$out")
+
+if [[ -n $pick ]]; then
+    IFS=$'\t' read -r _ kind target session <<<"$pick"
+    case $kind in
+        session) go "$session" ;;
+        layout) load_layout "$target" "$session" ;;
+        dir) open_dir "$target" ;;
+    esac
+elif [[ -n $query ]]; then
+    # Nothing matched: treat the query as a directory name under SEARCH_DIRS.
+    for d in "${SEARCH_DIRS[@]}"; do
+        [[ -d $d/$query ]] && { open_dir "$d/$query"; exit; }
+    done
+fi

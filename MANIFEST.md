@@ -10,6 +10,7 @@
 | `tmuxp/` | `~/.tmuxp/` | Session definitions. `services` is load-bearing: cloudflared + ttyd. |
 | `systemd/user/` | `~/.config/systemd/user/` | `tmux-services.service` starts the `services` session at boot. Needs `loginctl enable-linger`. |
 | `bin/` | `~/.local/bin/` | `ttyd-nerd` (patched ttyd launcher), `start-services-session` (idempotent tmuxp wrapper) |
+| `bin/.local/fmux` | `~/bin/.local/fmux` | Session switcher on `prefix f`/`o`: live sessions, tmuxp layouts, project dirs in one fzf list. Not under the `bin/` → `~/.local/bin` link. |
 | `.tmux.conf` | `~/.tmux.conf` | tpm + resurrect + continuum |
 | `config/`, `alacritty/`, `rofi/`, … | `~/.config/…` | Older desktop config, pre-2025 |
 

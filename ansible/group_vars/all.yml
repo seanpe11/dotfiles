@@ -60,6 +60,7 @@ dotfiles_links:
   - { src: "tmuxp",                dest: "~/.tmuxp" }
   - { src: "systemd/user",         dest: "~/.config/systemd/user" }
   - { src: "bin",                  dest: "~/.local/bin" }
+  - { src: "bin/.local/fmux",      dest: "~/bin/.local/fmux" }  # path .tmux.conf binds (prefix f/o)
   - { src: ".tmux.conf",           dest: "~/.tmux.conf" }
   - { src: "config/hypr",          dest: "~/.config/hypr" }      # rocinante only — no compositor in WSL
   - { src: "config/kitty",         dest: "~/.config/kitty" }
